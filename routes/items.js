@@ -1,32 +1,65 @@
+const { DataTypes } = require('sequelize');
 const express = require('express')
-
+const db = require('../db.js')
 const router = express.Router()
 
+const Book = db.define('Book', {
+    name: DataTypes.STRING,
+    description: DataTypes.STRING,
+});
+
 router.route('/')
-    .get((req, res) => {
-        res.send(`Items list`)
+    .get(async (req, res) => {
+        await Book.findAll().then(function (result) {
+            res.json(result);
+        }).catch(function (err) {
+            res.status(400).json({
+                err: err,
+            });
+        });
     })
-    .post((req, res) => {
-        res.send(`New item created`)
+    .post(async (req, res) => {
+        Book.create({
+            name: req.body.name,
+            description: req.body.description,
+        }).then(function (result) {
+            res.json(result);
+        }).catch(function (err) {
+            res.status(400).json({
+                err: err,
+            });
+        });
     })
 
 router.route('/:id')
-    .get((req, res) => {
-        console.log(req.item)
-        res.send(`Get item with id: ${req.params.id}`)
+    .get(async (req, res) => {
+        await Book.findOne({ where: { id: req.params.id } }).then(function (result) {
+            res.json(result);
+        }).catch(function (err) {
+            res.status(400).json({
+                err: err,
+            });
+        });
     })
-    .put((req, res) => {
-        res.send(`Update an item with id: ${req.params.id}`)
+    .put(async (req, res) => {
+        await Book.update(
+            { name: req.body.name, description: req.body.description },
+            { where: { id: req.params.id } }).then(function (result) {
+                res.json(result);
+            }).catch(function (err) {
+                res.status(400).json({
+                    err: err,
+                });
+            });
     })
-    .delete((req, res) => {
-        res.send(`Delete an item with id: ${req.params.id}`)
+    .delete(async (req, res) => {
+        await Book.destroy({ where: { id: req.params.id } }).then(function (result) {
+            res.json(result);
+        }).catch(function (err) {
+            res.status(400).json({
+                err: err,
+            });
+        });
     })
-
-const items = [{ name: "Item 1" }, { name: "Item 2" }, { name: "Item 3" }]
-router.param("id", (req, res, next, id) => {
-    req.item = items[id]    
-    next()
-})
-
 
 module.exports = router

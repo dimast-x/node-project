@@ -13,10 +13,15 @@
   "dependencies": {
     "axios": "^0.27.2",
     "express": "^4.18.1",
-    "request": "^2.88.2"
+    "express-jwt": "^7.7.5",
+    "jsonwebtoken": "^8.5.1",
+    "pg": "^8.7.3",
+    "request": "^2.88.2",
+    "sequelize": "^6.20.1",
+    "sqlite3": "^5.0.8"
   },
   "devDependencies": {
-    "nodemon": "^2.0.16",
-    "husky": "^8.0.0"
+    "husky": "^8.0.0",
+    "nodemon": "^2.0.16"
   }
 }
