@@ -1,26 +1,39 @@
-const express = require('express')
+const express = require('express');
 var request = require('request');
-const userRouter = require('./routes/users')
-const itemsRouter = require('./routes/items')
-const db = require('./db.js')
+const winston = require('winston');
+var morgan = require('morgan');
+const userRouter = require('./routes/users');
+const itemsRouter = require('./routes/items');
+const db = require('./db.js');
+const app = express();
 
-const app = express()
+const logger = winston.createLogger({
+    format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
+    ),
+    defaultMeta: { service: 'main server' },
+    transports: [
+        new winston.transports.File({ filename: 'error.log', level: 'error' }),
+        new winston.transports.File({ filename: 'combined.log' }),
+    ],
+});
 
 async function checkDBConnection() {
     try {
         await db.authenticate();
-        console.log('Connection has been established successfully.');
+        logger.info('Connection has been established successfully.');
     } catch (error) {
-        console.error('Unable to connect to the database:', error);
+        logger.error('Unable to connect to the database: ', error);
     }
-}
+};
 
-checkDBConnection()
-app.use(logger)
+checkDBConnection();
+app.use(morgan('combined'));
 app.use(express.json());
 
-app.use('/users', userRouter)
-app.use('/items', itemsRouter)
+app.use('/users', userRouter);
+app.use('/items', itemsRouter);
 
 app.get('/bitcoin', function (req, res, next) {
     request({
@@ -29,9 +42,9 @@ app.get('/bitcoin', function (req, res, next) {
     }).pipe(res);
 });
 
-function logger(req, res, next) {
-    console.log(req.method, req.originalUrl)
-    next()
+var port = process.env.PORT;
+if (!port) {
+    port = 3000;
 }
-
-app.listen(3000)
+app.listen(port);
+logger.info(`Server started listening on port ${port}`);

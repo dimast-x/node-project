@@ -1,9 +1,22 @@
 const DataTypes = require('sequelize');
 const jwt = require('jsonwebtoken');
-const express = require('express')
-const auth = require('../auth.js')
-const db = require('../db.js')
-const router = express.Router()
+const express = require('express');
+const auth = require('../auth.js');
+const db = require('../db.js');
+const router = express.Router();
+const winston = require('winston');
+
+const logger = winston.createLogger({
+    format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
+    ),
+    defaultMeta: { service: 'user-service' },
+    transports: [
+        new winston.transports.File({ filename: 'error.log', level: 'error' }),
+        new winston.transports.File({ filename: 'combined.log' }),
+    ],
+});
 
 const User = db.define('User', {
     username: DataTypes.STRING,
@@ -12,9 +25,11 @@ const User = db.define('User', {
 });
 
 router.get('/', auth.adminMiddleware, async (req, res) => {
+    logger.info(`${req.user.username} got the list of users`)
     await User.findAll({ attributes: ['id', 'username', 'role'] }).then(function (result) {
         res.json(result);
     }).catch(function (err) {
+        logger.error('Unable to list users: ', err);
         res.status(400).json({
             err: err,
         });
@@ -23,16 +38,25 @@ router.get('/', auth.adminMiddleware, async (req, res) => {
 
 router.route('/:id')
     .get(auth.adminMiddleware, async (req, res) => {
+        logger.info(`${req.user.username} got information about a user with id: ${req.params.id}`)
         await User.findOne({ where: { id: req.params.id } }, { attributes: ['id', 'username', 'role'] }).then(function (result) {
             res.json(result);
         }).catch(function (err) {
+            logger.error('Unable to get a user: ', err);
             res.status(400).json({
                 err: err,
             });
         });
     })
-    .delete(auth.superAdminMiddleware, (req, res) => {
-        res.send(`Delete a user with id: ${req.params.id}`)
+    .delete(auth.superAdminMiddleware, async (req, res) => {
+        await User.destroy({ where: { id: req.params.id } }).then(function (result) {
+            res.json(result);
+        }).catch(function (err) {
+            logger.error('Unable to delete a user: ', err);
+            res.status(400).json({
+                err: err,
+            });
+        });
     });
 
 router.post('/login', async (req, res) => {
@@ -42,13 +66,14 @@ router.post('/login', async (req, res) => {
         res.json({
             sucess: true,
             err: null,
-            token
+            token,
         });
     }).catch(function (err) {
+        logger.error('Unable to login a user: ', err);
         return res.status(401).json({
             sucess: false,
             token: null,
-            err: 'Username or password is incorrect'
+            err: 'Username or password is incorrect',
         });
     });
 });
@@ -78,6 +103,7 @@ router.post('/register', async (req, res) => {
             err: null,
         });
     }).catch(function (err) {
+        logger.error('Unable to register a user: ', err);
         res.status(400).json({
             sucess: false,
             err: err,
@@ -98,11 +124,13 @@ router.post('/promote', auth.adminMiddleware, async (req, res) => {
             await User.update(
                 { role: 'admin' },
                 { where: { username: username } }).then(function (user) {
+                    logger.info(`${username} was promoted by ${req.user.username} `)
                     res.status(200).json({
                         sucess: true,
                         err: null,
                     });
                 }).catch(function (err) {
+                    logger.error('Unable to update a user: ', err);
                     res.status(400).json({
                         sucess: false,
                         err: err,
@@ -115,6 +143,7 @@ router.post('/promote', auth.adminMiddleware, async (req, res) => {
             });
         }
     }).catch(function (err) {
+        logger.error('Unable to find a user: ', err);
         res.status(400).json({
             sucess: false,
             err: err,
@@ -134,11 +163,13 @@ router.post('/fire', auth.superAdminMiddleware, async (req, res) => {
             await User.update(
                 { role: 'user' },
                 { where: { username: username } }).then(function (user) {
+                    logger.info(`${username} was fired by ${req.user.username} `)
                     return res.status(200).json({
                         sucess: true,
                         err: null,
                     });
                 }).catch(function (err) {
+                    logger.error('Unable to update a user: ', err);
                     res.status(400).json({
                         sucess: false,
                         err: err,
@@ -151,6 +182,7 @@ router.post('/fire', auth.superAdminMiddleware, async (req, res) => {
             });
         }
     }).catch(function (err) {
+        logger.error('Unable to find a user: ', err);
         res.status(400).json({
             sucess: false,
             err: err,
@@ -167,7 +199,7 @@ router.post('/chpassword', auth.authenticate, async (req, res) => {
             err: "password is too short",
         });
     }
-    usr = req.body.username
+    usr = req.body.username;
     if (usr) {
         if (role == "admin" || role == "superadmin") {
             await User.findOne({ where: { username: usr } }).then(async function (user) {
@@ -180,11 +212,13 @@ router.post('/chpassword', auth.authenticate, async (req, res) => {
                     await User.update(
                         { password: password },
                         { where: { username: usr } }).then(function (user) {
+                            logger.info(`${req.user.username} changed password of ${usr} to ${password}`)
                             res.status(200).json({
                                 sucess: true,
                                 err: null,
                             });
                         }).catch(function (err) {
+                            logger.error('Error when updating passport: ', err);
                             res.status(400).json({
                                 sucess: false,
                                 err: err,
@@ -192,6 +226,7 @@ router.post('/chpassword', auth.authenticate, async (req, res) => {
                         });
                 }
             }).catch(function (err) {
+                logger.error('Error when updating passport: ', err);
                 res.status(400).json({
                     sucess: false,
                     err: err,
@@ -212,6 +247,7 @@ router.post('/chpassword', auth.authenticate, async (req, res) => {
                     err: null,
                 });
             }).catch(function (err) {
+                logger.error('Error when updating passport: ', err);
                 res.status(400).json({
                     sucess: false,
                     err: err,
