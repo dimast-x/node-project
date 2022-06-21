@@ -1,41 +1,61 @@
 # Node project
 
-1. **Подготовка проекта.**
-Выбрать фреймворк (из списка - Nest, Express, Koa, Fastify, Loopback)/компилятор(JavaScript or TypeScript). **1 балл.**
-Создать репозиторий (github). **1 балл**
-Создать [Readme.md](http://Readme.md) файл с описанием проекта, обоснованием выбора технологического стека. **3 балла**
-Выбрать набор используемых lint правил. **3 балла**
-Настроить гит-хуки на pre-commit и pre-push. **2 балла.**
+## Description:
 
-**10 баллов.**
+A simple backend project that includes: endpoints with different requests, authentication, working with users and their rights, logging implementation and working with the database through orm,
 
-2. **Создать RestAPI сервер** со стандартным набором операций CRUD для минимум одного типа сущности (продукты, товары, животные, книги, и т.д.), плюс обязательно операции с пользователями. Также минимум одна интеграция с 3rd party service - делать запрос на сторонний сервис.
+## Used Stack:
 
-Инициализация проекта (package.json, npm scripts, иницальная структура с бутстрап файлом). **5 баллов.**
-Создать эндпойнты на CRUD операции (ответы просто mock-нуть на этом этапе). Минимум 2 сущности - тематическая и пользователи. **10 баллов.**
-Эндпойнт с запросом на 3rd party services. **5 баллов.**
+- `Express` is pretty similar to golang in its structure from the first sight. And it also allows to create projects from scratch really quickly.
+- `JavaScript` is used instead `TypeScript` because the project is pretty small and should be done really quickly. In production it will be better to `TypeScript`.
+  Sequelize - as feature-rich ORM for making queries to the database.
+- A cloud-hosted Postgres instance by [Supabase](https://supabase.com/) was chosen as the database solution to host just a few tables as it is free for small projects, and easy to deploy and maintain.
+- For formatting let's use [Prettier](https://prettier.io/).
 
-**20 баллов.**
+## Environment vars that should be set:
 
-3. **Подключение Базы Данных.**
-Спроектировать (отразить схему в Readme файле) и имплементировать (создать физически) Базу данных (SQL/NoSQL). **8 баллов**
-Сделать интеграцию сервера с базой данных - использовать ORM (TypeORM, Prisma, MicroORM, Mongoose, Sequelize) **7 баллов**
-*- ****либо QueryBuilder (knex) **5 баллов.**
-- либо чистые SQL запросы в БД. **5 баллов***
+```sh
+export DB_NAME=postgres
+export DB_USER=postgres
+export DB_PASS='password'
+export DB_HOST='db_host'
+export DB_DRIVER=postgres
 
-**15 баллов.**
+export AUTH_SECRET=auth-secret
+export ERR_LOG_PATH=error.log
+export COMBINED_LOG_PATH=combined.log
+export PORT=3001
+```
 
-4. Добавить авторизацию на основе JWT токена (можно 3rd party - firebase, auth0).
-Возможность менять пароль (только свой; и чужой - если пользователь админ), назначать пользователя админом. **12 баллов**
-Организовать ACL: Операции по работе с пользователям должны быть доступны только админ-пользователям. **8 баллов**
+## Database
 
-**20 баллов.**
+**Items**
 
-5. Добавить logger (winston 3.0) на все операции (info), отлавливать exception по всему приложению (error). Писать логи в физический файл на том же сервере, чтобы можно было подключить какой log сервис (splunk, kibana).
+| id   | name   | description | createdAt  | updatedAt  |
+| ---- | ------ | ----------- | ---------- | ---------- |
+| int8 | string | string      | timestampz | timestampz |
 
-**5 баллов.**
+**Users**
 
-6. Задеплоить сервер и базу в облако - heroku, aws, azure.
-(например, [как задеплоить postgres db в heroku](https://towardsdatascience.com/how-to-deploy-a-postgres-database-for-free-95cf1d8387bf))
+| id   | username | password | role   | createdAt  | updatedAt  |
+| ---- | -------- | -------- | ------ | ---------- | ---------- |
+| int8 | string   | string   | string | timestampz | timestampz |
 
-**10 баллов.**
+## API Endpoints description
+
+| METHOD | ENDPOINT            | GROUP                     | DESCRIPTION                                                                                                                           |
+| ------ | ------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/items`            | [public]                  | get public list of items.                                                                                                             |
+| POST   | `/items`            | [user, admin, superadmin] | add a new item to the list.                                                                                                           |
+| GET    | `/items/:id`        | [public]                  | get an item with specific id.                                                                                                         |
+| PUT    | `/items:id`         | [user, admin, superadmin] | update an item in the list.                                                                                                           |
+| DELETE | `/items:id`         | [user, admin, superadmin] | delete an item in the list.                                                                                                           |
+| GET    | `/bitcoin`          | [public]                  | get current Bitcoin price from a third-party provider.                                                                                |
+| GET    | `/users`            | [admin, superadmin]       | get list of users and their roles.                                                                                                    |
+| GET    | `/users/:id`        | [admin, superadmin]       | get info about a user with specific id.                                                                                               |
+| DELETE | `/users:id`         | [superadmin]              | delete a user.                                                                                                                        |
+| POST   | `/users/login`      | [public]                  | login with username and password.                                                                                                     |
+| POST   | `/users/register`   | [public]                  | register with username and password.                                                                                                  |
+| PUT    | `/users/promote`    | [admin, superadmin]       | promote a user to admin.                                                                                                              |
+| PUT    | `/users/fire`       | [superadmin]              | make an admin a user.                                                                                                                 |
+| PUT    | `/users/chpassword` | [user, admin, superadmin] | for own password, [admin, superadmin] for other users' passwords - change own password or someones else if the username is specified. |
