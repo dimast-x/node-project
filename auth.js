@@ -7,7 +7,9 @@ function getToken(req) {
   return token;
 }
 
-function authenticate(req, res, next) {
+exports.secret = secret;
+
+exports.authenticate = (req, res, next) => {
   const token = getToken(req);
   if (!token) return res.sendStatus(401);
 
@@ -16,9 +18,9 @@ function authenticate(req, res, next) {
     req.user = user;
     next();
   });
-}
+};
 
-function adminMiddleware(req, res, next) {
+exports.adminMiddleware = (req, res, next) => {
   const token = getToken(req);
   if (!token) return res.sendStatus(401);
 
@@ -30,9 +32,9 @@ function adminMiddleware(req, res, next) {
       res.sendStatus(403);
     }
   });
-}
+};
 
-function superAdminMiddleware(req, res, next) {
+exports.superAdminMiddleware = (req, res, next) => {
   const token = getToken(req);
   if (!token) return res.sendStatus(401);
 
@@ -41,9 +43,4 @@ function superAdminMiddleware(req, res, next) {
     req.user = user;
     next();
   });
-}
-
-exports.secret = secret;
-exports.authenticate = authenticate;
-exports.adminMiddleware = adminMiddleware;
-exports.superAdminMiddleware = superAdminMiddleware;
+};

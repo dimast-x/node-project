@@ -1,26 +1,11 @@
 const express = require("express");
 var request = require("request");
-const winston = require("winston");
-var morgan = require("morgan");
 const userRouter = require("./routes/users");
 const itemsRouter = require("./routes/items");
+
+const logger = require("./log.js");
 const db = require("./db.js");
 const app = express();
-
-const logger = winston.createLogger({
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
-  ),
-  defaultMeta: { service: "main server" },
-  transports: [
-    new winston.transports.File({
-      filename: process.env.ERR_LOG_PATH,
-      level: "error",
-    }),
-    new winston.transports.File({ filename: process.env.COMBINED_LOG_PATH }),
-  ],
-});
 
 async function checkDBConnection() {
   try {
@@ -32,7 +17,6 @@ async function checkDBConnection() {
 }
 
 checkDBConnection();
-app.use(morgan("combined"));
 app.use(express.json());
 
 app.use("/users", userRouter);

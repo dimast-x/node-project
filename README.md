@@ -45,15 +45,15 @@ export PORT=3001
 
 | METHOD | ENDPOINT            | GROUP                     | DESCRIPTION                                                                                                                           |
 | ------ | ------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| GET    | `/items`            | [public]                  | get public list of items.                                                                                                             |
+| GET    | `/items`            | [public]                  | get public list of items. 3443                                                                                                        |
 | POST   | `/items`            | [user, admin, superadmin] | add a new item to the list.                                                                                                           |
 | GET    | `/items/:id`        | [public]                  | get an item with specific id.                                                                                                         |
-| PUT    | `/items:id`         | [user, admin, superadmin] | update an item in the list.                                                                                                           |
-| DELETE | `/items:id`         | [user, admin, superadmin] | delete an item in the list.                                                                                                           |
+| PUT    | `/items/:id`        | [user, admin, superadmin] | update an item in the list.                                                                                                           |
+| DELETE | `/items/:id`        | [user, admin, superadmin] | delete an item in the list.                                                                                                           |
 | GET    | `/bitcoin`          | [public]                  | get current Bitcoin price from a third-party provider.                                                                                |
 | GET    | `/users`            | [admin, superadmin]       | get list of users and their roles.                                                                                                    |
 | GET    | `/users/:id`        | [admin, superadmin]       | get info about a user with specific id.                                                                                               |
-| DELETE | `/users:id`         | [superadmin]              | delete a user.                                                                                                                        |
+| DELETE | `/users/:id`        | [superadmin]              | delete a user.                                                                                                                        |
 | POST   | `/users/login`      | [public]                  | login with username and password.                                                                                                     |
 | POST   | `/users/register`   | [public]                  | register with username and password.                                                                                                  |
 | PUT    | `/users/promote`    | [admin, superadmin]       | promote a user to admin.                                                                                                              |
